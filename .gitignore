@@ -1,0 +1,15 @@
+# Secrets — never commit
+secrets.toml
+.streamlit/secrets.toml
+reset_admin.py
+
+# Python
+venv/
+__pycache__/
+*.pyc
+.env
+
+# OS/editor junk
+.DS_Store
+Thumbs.db
+.vscode/
