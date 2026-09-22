@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1c1128">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<title>Amores Softy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --bg: #1c1128;
+    --bg-alt: #241732;
+    --surface: #2c1c3d;
+    --surface-raised: #35234a;
+    --line: #46325c;
+    --text: #f9f2e8;
+    --text-dim: #c7b6d6;
+    --text-faint: #8f7ba3;
+
+    --vanilla: #f3e3b8;
+    --vanilla-ink: #4a3a14;
+    --mango: #f2b441;
+    --mango-ink: #4a3308;
+    --strawberry: #f2a3b6;
+    --strawberry-ink: #4a1524;
+    --pistachio: #a6d9a0;
+    --pistachio-ink: #1c3a17;
+    --choco: #c99a6b;
+    --choco-ink: #3a2410;
+    --gold: #e8c15a;
+    --gold-ink: #453308;
+
+    --good: #8fd19e;
+    --danger: #e08a8a;
+
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  :root:not([data-theme="light"]) {
+    --bg: #1c1128; --text: #f9f2e8;
+  }
+  :root[data-theme="dark"] {
+    --bg: #1c1128; --text: #f9f2e8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --bg: #1c1128; --text: #f9f2e8; }
+  }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); height: 100%; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .app {
+    max-width: 520px;
+    margin: 0 auto;
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header {
+    position: sticky;
+    top: env(safe-area-inset-top, 0px);
+    z-index: 20;
+    background: linear-gradient(180deg, var(--bg-alt) 0%, var(--bg-alt) 85%, transparent 100%);
+    padding: 18px 18px 10px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--line);
+  }
+  header h1 {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 1.5rem;
+    margin: 0;
+    letter-spacing: 0.2px;
+  }
+  header .date {
+    font-size: 0.8rem;
+    color: var(--text-faint);
+  }
+
+  main { padding: 16px 16px 0; flex: 1; }
+
+  .section-label {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--text-dim);
+    margin: 18px 2px 10px;
+  }
+
+  .items-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .item-tile {
+    position: relative;
+    border: none;
+    border-radius: 18px;
+    padding: 14px 12px 12px;
+    min-height: 78px;
+    text-align: left;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: transform 0.08s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .item-tile:active { transform: scale(0.96); }
+  .item-tile .name {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 600;
+    font-size: 1.02rem;
+    line-height: 1.15;
+  }
+  .item-tile .price {
+    font-size: 0.85rem;
+    font-weight: 600;
+    opacity: 0.85;
+    margin-top: 2px;
+  }
+  .item-tile .badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    min-width: 26px;
+    height: 26px;
+    border-radius: 999px;
+    background: var(--gold);
+    color: var(--gold-ink);
+    font-weight: 700;
+    font-size: 0.85rem;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 0 6px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+  }
+  .item-tile.has-qty .badge { display: flex; }
+  .item-tile.pulse { animation: tilePulse 0.22s ease; }
+  @keyframes tilePulse {
+    0% { transform: scale(1); }
+    40% { transform: scale(0.94); }
+    100% { transform: scale(1); }
+  }
+  .item-tile.t-vanilla { background: var(--vanilla); color: var(--vanilla-ink); }
+  .item-tile.t-mango { background: var(--mango); color: var(--mango-ink); }
+  .item-tile.t-strawberry { background: var(--strawberry); color: var(--strawberry-ink); }
+  .item-tile.t-pistachio { background: var(--pistachio); color: var(--pistachio-ink); }
+  .item-tile.t-choco { background: var(--choco); color: var(--choco-ink); }
+  .item-tile.t-gold { background: var(--gold); color: var(--gold-ink); }
+
+  .bill-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    margin-top: 16px;
+    overflow: hidden;
+  }
+  .bill-empty {
+    padding: 26px 16px;
+    text-align: center;
+    color: var(--text-faint);
+    font-size: 0.92rem;
+  }
+  .bill-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--line);
+  }
+  .bill-row:last-of-type { border-bottom: none; }
+  .bill-row .rname {
+    flex: 1;
+    min-width: 0;
+    font-size: 0.94rem;
+    font-weight: 500;
+  }
+  .bill-row .rprice {
+    font-size: 0.78rem;
+    color: var(--text-faint);
+    display: block;
+  }
+  .stepper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface-raised);
+    border-radius: 999px;
+    padding: 4px;
+  }
+  .stepper button {
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    border: none;
+    background: var(--bg-alt);
+    color: var(--text);
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    line-height: 1;
+  }
+  .stepper button:active { transform: scale(0.9); }
+  .stepper .qty {
+    min-width: 18px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 0.92rem;
+  }
+  .rtotal {
+    min-width: 56px;
+    text-align: right;
+    font-weight: 700;
+    font-size: 0.94rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .rremove {
+    width: 26px;
+    height: 26px;
+    border-radius: 999px;
+    border: none;
+    background: transparent;
+    color: var(--text-faint);
+    font-size: 1.05rem;
+    cursor: pointer;
+  }
+  .rremove:active { color: var(--danger); }
+
+  .bill-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 14px 16px;
+    background: var(--bg-alt);
+  }
+  .bill-total .label {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 0.95rem;
+    color: var(--text-dim);
+  }
+  .bill-total .amount {
+    font-family: 'Baloo 2', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--gold);
+  }
+
+  .save-bar {
+    padding: 12px 16px calc(14px + env(safe-area-inset-bottom, 0px));
+  }
+  .save-btn {
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 16px;
+    background: var(--good);
+    color: #12321c;
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 1.05rem;
+    cursor: pointer;
+  }
+  .save-btn:disabled {
+    background: var(--surface-raised);
+    color: var(--text-faint);
+  }
+  .save-btn:active:not(:disabled) { transform: scale(0.98); }
+
+  .today-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    margin-top: 4px;
+  }
+  .today-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    cursor: pointer;
+  }
+  .today-head .t1 {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 600;
+    font-size: 0.98rem;
+  }
+  .today-head .t2 {
+    font-size: 0.82rem;
+    color: var(--text-faint);
+  }
+  .today-head .chev {
+    transition: transform 0.15s ease;
+    color: var(--text-faint);
+  }
+  .today-head.open .chev { transform: rotate(90deg); }
+  .today-list { display: none; padding: 0 16px 12px; }
+  .today-list.open { display: block; }
+  .today-list .bline {
+    display: flex;
+    justify-content: space-between;
+    padding: 7px 0;
+    border-bottom: 1px dashed var(--line);
+    font-size: 0.86rem;
+  }
+  .today-list .bline:last-child { border-bottom: none; }
+  .today-list .bline .bnum { color: var(--text-dim); }
+  .today-list .bline .btime { color: var(--text-faint); font-size: 0.78rem; }
+  .today-list .bline .bamt { font-weight: 700; font-variant-numeric: tabular-nums; }
+  .today-list .bdel {
+    background: none; border: none; color: var(--text-faint);
+    font-size: 0.95rem; cursor: pointer; padding: 0 0 0 8px;
+  }
+
+  .export-row {
+    display: flex;
+    gap: 10px;
+    padding: 16px 16px 24px;
+  }
+  .export-btn, .clear-btn {
+    flex: 1;
+    padding: 13px;
+    border-radius: 14px;
+    border: none;
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+  }
+  .export-btn { background: var(--gold); color: var(--gold-ink); }
+  .clear-btn { background: transparent; color: var(--text-faint); border: 1px solid var(--line); }
+  .export-btn:active, .clear-btn:active { transform: scale(0.98); }
+
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+    transform: translateX(-50%) translateY(20px);
+    background: var(--surface-raised);
+    color: var(--text);
+    padding: 11px 18px;
+    border-radius: 999px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 50;
+    white-space: nowrap;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .item-tile, .save-btn, .export-btn, .clear-btn, .toast { transition: none; animation: none; }
+  }
+</style>
+</head>
+<body>
+<div id="loginOverlay" style="position:fixed;inset:0;background:#1c1128;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:20px;">
+  <div style="font-family:'Baloo 2',sans-serif;font-size:1.3rem;color:#f9f2e8;">🍦 Shop Login</div>
+  <input id="pinInput" type="password" maxlength="8" placeholder="8-char PIN" style="padding:12px;border-radius:10px;border:none;width:220px;text-align:center;font-size:1.1rem;">
+  <button id="pinLoginBtn" style="padding:12px 24px;border-radius:10px;border:none;background:#8fd19e;font-weight:700;cursor:pointer;">Login</button>
+  <div id="loginError" style="color:#e08a8a;font-size:0.85rem;"></div>
+</div>
+<div class="app">
+  <header>
+    <h1>🍦 Amores Softy</h1>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="date" id="todayLabel"></div>
+      <button id="logoutBtn" style="background:none;border:none;color:var(--text-faint);font-size:0.8rem;cursor:pointer;text-decoration:underline;">Logout</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="section-label">Tap an item to add</div>
+    <div class="items-grid" id="itemsGrid"></div>
+
+    <div class="section-label">Current bill</div>
+    <div class="bill-card">
+      <div id="billBody"></div>
+      <div class="bill-total">
+        <span class="label">Total</span>
+        <span class="amount" id="billTotal">₹0</span>
+      </div>
+    </div>
+  </main>
+
+  <div class="save-bar">
+    <button class="save-btn" id="saveBtn" disabled>Save bill</button>
+  </div>
+
+  <main style="padding-top:0;">
+    <div class="today-card">
+      <div class="today-head" id="todayHead">
+        <div>
+          <div class="t1">Today's bills</div>
+          <div class="t2" id="todaySummary">0 bills · ₹0</div>
+        </div>
+        <span class="chev">▸</span>
+      </div>
+      <div class="today-list" id="todayList"></div>
+    </div>
+
+    <div class="export-row">
+      <button class="clear-btn" id="clearBtn">Clear today</button>
+      <button class="export-btn" id="exportBtn">Export to Excel</button>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  var SUPABASE_URL = 'https://zioniculywkhdfnuthcs.supabase.co';
+  var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inppb25pY3VseXdraGRmbnV0aGNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwODUxOTIsImV4cCI6MjEwNTY2MTE5Mn0.Ney1VVhDm0mJUgwLVmRvcwI1Ro9OMnPaH1wamVvjDbs';
+  var SHOP_EMAIL = 'shop02@amores.local'; // change per shop deployment copy
+
+  function getSession() {
+    try { return JSON.parse(localStorage.getItem('sb_session') || 'null'); } catch (e) { return null; }
+  }
+  function setSession(s) { localStorage.setItem('sb_session', JSON.stringify(s)); }
+
+  function doLogin(pin) {
+    return fetch(SUPABASE_URL + '/auth/v1/token?grant_type=password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON_KEY },
+      body: JSON.stringify({ email: SHOP_EMAIL, password: pin })
+    }).then(function (r) { return r.json(); }).then(function (data) {
+      if (!data.access_token) throw new Error(data.error_description || 'Login failed');
+      return fetch(SUPABASE_URL + '/rest/v1/profiles?id=eq.' + data.user.id + '&select=shop_id', {
+        headers: { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + data.access_token }
+      }).then(function (r) { return r.json(); }).then(function (profile) {
+        setSession({ token: data.access_token, refresh: data.refresh_token, shop_id: profile[0].shop_id });
+      });
+    });
+  }
+
+  function pushBill(bill) {
+    var session = getSession();
+    if (!session) return Promise.reject('no session');
+    var headers = { 'Content-Type': 'application/json', apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + session.token, Prefer: 'return=representation' };
+    return fetch(SUPABASE_URL + '/rest/v1/bills', {
+      method: 'POST', headers: headers,
+      body: JSON.stringify({ shop_id: session.shop_id, bill_no: bill.billNo, total: bill.total })
+    }).then(function (r) { return r.json(); }).then(function (rows) {
+      var billId = rows[0].id;
+      var lines = bill.lines.map(function (l) {
+        return { bill_id: billId, item_name: l.name, price: l.price, qty: l.qty };
+      });
+      return fetch(SUPABASE_URL + '/rest/v1/bill_lines', { method: 'POST', headers: headers, body: JSON.stringify(lines) });
+    });
+  }
+
+  function queuePending(bill) {
+    var q = JSON.parse(localStorage.getItem('pending_sync') || '[]');
+    q.push(bill);
+    localStorage.setItem('pending_sync', JSON.stringify(q));
+  }
+
+  function trySyncPendingAsync() {
+    var q = JSON.parse(localStorage.getItem('pending_sync') || '[]');
+    if (q.length === 0) return Promise.resolve();
+    var remaining = [];
+    var chain = Promise.resolve();
+    q.forEach(function (bill) {
+      chain = chain.then(function () { return pushBill(bill).catch(function () { remaining.push(bill); }); });
+    });
+    return chain.then(function () { localStorage.setItem('pending_sync', JSON.stringify(remaining)); });
+  }
+  function trySyncPending() { trySyncPendingAsync(); }
+
+  function syncBill(bill) {
+    pushBill(bill).catch(function () { queuePending(bill); });
+  }
+
+  var ITEMS = [
+    { id: 'cone_s',    name: 'Cone',        variant: 'Small', price: 20, theme: 't-vanilla' },
+    { id: 'cone_l',    name: 'Cone',        variant: 'Large', price: 30, theme: 't-mango' },
+    { id: 'mini_a',    name: 'Mini Sundae', variant: 'A',     price: 40, theme: 't-strawberry' },
+    { id: 'mini_b',    name: 'Mini Sundae', variant: 'B',     price: 50, theme: 't-pistachio' },
+    { id: 'sundae',    name: 'Sundae',      variant: '',      price: 60, theme: 't-choco' },
+    { id: 'spl_sundae',name: 'Spl Sundae',  variant: '',      price: 80, theme: 't-gold' }
+  ];
+
+  var STORAGE_KEY = 'sundae_counter_bills_v1';
+  var cart = {}; // itemId -> qty
+  var todayOpen = false;
+
+  function todayStr() {
+    var d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  }
+  function todayDisplay() {
+    var d = new Date();
+    return d.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
+  }
+  function timeDisplay(ts) {
+    return new Date(ts).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+  }
+
+  function loadStore() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) { return {}; }
+  }
+  function saveStore(store) {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(store)); } catch (e) {}
+  }
+  function getTodayBills() {
+    var store = loadStore();
+    return store[todayStr()] || [];
+  }
+  function setTodayBills(bills) {
+    var store = loadStore();
+    store[todayStr()] = bills;
+    saveStore(store);
+  }
+
+  function itemById(id) {
+    for (var i = 0; i < ITEMS.length; i++) if (ITEMS[i].id === id) return ITEMS[i];
+    return null;
+  }
+  function itemLabel(item) {
+    return item.variant ? item.name + ' (' + item.variant + ')' : item.name;
+  }
+
+  function cartTotal() {
+    var t = 0;
+    Object.keys(cart).forEach(function (id) {
+      t += cart[id] * itemById(id).price;
+    });
+    return t;
+  }
+  function cartCount() {
+    var c = 0;
+    Object.keys(cart).forEach(function (id) { c += cart[id]; });
+    return c;
+  }
+
+  var toastTimer = null;
+  function showToast(msg) {
+    var el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { el.classList.remove('show'); }, 1600);
+  }
+
+  function renderGrid() {
+    var grid = document.getElementById('itemsGrid');
+    grid.innerHTML = '';
+    ITEMS.forEach(function (item) {
+      var tile = document.createElement('button');
+      tile.className = 'item-tile ' + item.theme;
+      tile.dataset.id = item.id;
+      tile.innerHTML =
+        '<span class="badge">' + (cart[item.id] || 0) + '</span>' +
+        '<span class="name">' + itemLabel(item) + '</span>' +
+        '<span class="price">₹' + item.price + '</span>';
+      if (cart[item.id]) tile.classList.add('has-qty');
+      tile.addEventListener('click', function () {
+        cart[item.id] = (cart[item.id] || 0) + 1;
+        tile.classList.add('pulse');
+        setTimeout(function () { tile.classList.remove('pulse'); }, 220);
+        renderAll();
+      });
+      grid.appendChild(tile);
+    });
+  }
+
+  function renderBill() {
+    var body = document.getElementById('billBody');
+    var ids = Object.keys(cart).filter(function (id) { return cart[id] > 0; });
+    if (ids.length === 0) {
+      body.innerHTML = '<div class="bill-empty">No items yet — tap above to start a bill</div>';
+    } else {
+      body.innerHTML = '';
+      ids.forEach(function (id) {
+        var item = itemById(id);
+        var qty = cart[id];
+        var row = document.createElement('div');
+        row.className = 'bill-row';
+        row.innerHTML =
+          '<div class="rname">' + itemLabel(item) + '<span class="rprice">₹' + item.price + ' each</span></div>' +
+          '<div class="stepper">' +
+            '<button class="dec" aria-label="Decrease">−</button>' +
+            '<span class="qty">' + qty + '</span>' +
+            '<button class="inc" aria-label="Increase">+</button>' +
+          '</div>' +
+          '<div class="rtotal">₹' + (qty * item.price) + '</div>' +
+          '<button class="rremove" aria-label="Remove">✕</button>';
+        row.querySelector('.dec').addEventListener('click', function () {
+          cart[id] = Math.max(0, cart[id] - 1);
+          if (cart[id] === 0) delete cart[id];
+          renderAll();
+        });
+        row.querySelector('.inc').addEventListener('click', function () {
+          cart[id] = cart[id] + 1;
+          renderAll();
+        });
+        row.querySelector('.rremove').addEventListener('click', function () {
+          delete cart[id];
+          renderAll();
+        });
+        body.appendChild(row);
+      });
+    }
+    document.getElementById('billTotal').textContent = '₹' + cartTotal();
+    document.getElementById('saveBtn').disabled = ids.length === 0;
+  }
+
+  function renderToday() {
+    var bills = getTodayBills();
+    var total = bills.reduce(function (s, b) { return s + b.total; }, 0);
+    document.getElementById('todaySummary').textContent = bills.length + ' bill' + (bills.length === 1 ? '' : 's') + ' · ₹' + total;
+    var list = document.getElementById('todayList');
+    if (bills.length === 0) {
+      list.innerHTML = '<div class="bline"><span class="bnum">No bills saved yet</span></div>';
+    } else {
+      list.innerHTML = '';
+      bills.slice().reverse().forEach(function (b) {
+        var line = document.createElement('div');
+        line.className = 'bline';
+        line.innerHTML =
+          '<span><span class="bnum">Bill #' + b.billNo + '</span> &nbsp; <span class="btime">' + timeDisplay(b.ts) + '</span></span>' +
+          '<span><span class="bamt">₹' + b.total + '</span><button class="bdel" aria-label="Delete bill">✕</button></span>';
+        line.querySelector('.bdel').addEventListener('click', function () {
+          var remaining = getTodayBills().filter(function (x) { return x.billNo !== b.billNo; });
+          setTodayBills(remaining);
+          renderToday();
+        });
+        list.appendChild(line);
+      });
+    }
+  }
+
+  function renderAll() {
+    renderGrid();
+    renderBill();
+    renderToday();
+  }
+
+  document.getElementById('saveBtn').addEventListener('click', function () {
+    var ids = Object.keys(cart).filter(function (id) { return cart[id] > 0; });
+    if (ids.length === 0) return;
+    var lines = ids.map(function (id) {
+      var item = itemById(id);
+      return { name: itemLabel(item), price: item.price, qty: cart[id], lineTotal: cart[id] * item.price };
+    });
+    var bills = getTodayBills();
+    var billNo = bills.length > 0 ? bills[bills.length - 1].billNo + 1 : 1;
+    var newBill = { billNo: billNo, ts: Date.now(), total: cartTotal(), lines: lines };
+    bills.push(newBill);
+    setTodayBills(bills);
+    syncBill(newBill);
+    cart = {};
+    renderAll();
+    showToast('Bill #' + billNo + ' saved');
+  });
+
+  document.getElementById('todayHead').addEventListener('click', function () {
+    todayOpen = !todayOpen;
+    this.classList.toggle('open', todayOpen);
+    document.getElementById('todayList').classList.toggle('open', todayOpen);
+  });
+
+  document.getElementById('clearBtn').addEventListener('click', function () {
+    if (getTodayBills().length === 0) { showToast('Nothing to clear'); return; }
+    if (confirm('Clear all of today\'s saved bills? This cannot be undone.')) {
+      setTodayBills([]);
+      renderToday();
+      showToast('Today cleared');
+    }
+  });
+
+  document.getElementById('exportBtn').addEventListener('click', function () {
+    var bills = getTodayBills();
+    if (bills.length === 0) { showToast('No bills to export yet'); return; }
+
+    var summaryRows = [['Bill No', 'Time', 'Items', 'Total (₹)']];
+    bills.forEach(function (b) {
+      var itemsStr = b.lines.map(function (l) { return l.name + ' x' + l.qty; }).join(', ');
+      summaryRows.push([b.billNo, timeDisplay(b.ts), itemsStr, b.total]);
+    });
+    summaryRows.push(['', '', 'Total sales', bills.reduce(function (s, b) { return s + b.total; }, 0)]);
+
+    var detailRows = [['Bill No', 'Time', 'Item', 'Price', 'Qty', 'Line Total']];
+    bills.forEach(function (b) {
+      b.lines.forEach(function (l) {
+        detailRows.push([b.billNo, timeDisplay(b.ts), l.name, l.price, l.qty, l.lineTotal]);
+      });
+    });
+
+    var itemTotals = {};
+    bills.forEach(function (b) {
+      b.lines.forEach(function (l) {
+        itemTotals[l.name] = itemTotals[l.name] || { qty: 0, amount: 0 };
+        itemTotals[l.name].qty += l.qty;
+        itemTotals[l.name].amount += l.lineTotal;
+      });
+    });
+    var itemRows = [['Item', 'Qty Sold', 'Amount (₹)']];
+    Object.keys(itemTotals).forEach(function (name) {
+      itemRows.push([name, itemTotals[name].qty, itemTotals[name].amount]);
+    });
+
+    var wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(summaryRows), 'Bills');
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(detailRows), 'Line Items');
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(itemRows), 'Item Totals');
+
+    XLSX.writeFile(wb, 'sales-' + todayStr() + '.xlsx');
+    showToast('Excel report downloaded');
+  });
+
+   document.getElementById('todayLabel').textContent = todayDisplay();
+  renderAll();
+
+  if (getSession()) {
+    document.getElementById('loginOverlay').style.display = 'none';
+  }
+  document.getElementById('pinLoginBtn').addEventListener('click', function () {
+    var pin = document.getElementById('pinInput').value;
+    doLogin(pin).then(function () {
+      document.getElementById('loginOverlay').style.display = 'none';
+      trySyncPending();
+    }).catch(function (e) {
+      document.getElementById('loginError').textContent = e.message || 'Login failed';
+    });
+  });
+    window.addEventListener('online', trySyncPending);
+  if (getSession()) trySyncPending();
+
+    document.getElementById('logoutBtn').addEventListener('click', function () {
+    var pending = JSON.parse(localStorage.getItem('pending_sync') || '[]');
+
+    if (pending.length > 0) {
+      if (!navigator.onLine) {
+        showToast('Offline — ' + pending.length + ' bill(s) not synced yet');
+        return;
+      }
+      showToast('Syncing ' + pending.length + ' bill(s)...');
+      trySyncPendingAsync().then(function () {
+        var stillPending = JSON.parse(localStorage.getItem('pending_sync') || '[]');
+        if (stillPending.length > 0) {
+          showToast(stillPending.length + ' bill(s) still failed to sync');
+          return;
+        }
+        doLogout();
+      });
+      return;
+    }
+
+    doLogout();
+  });
+
+  function doLogout() {
+    if (confirm('Log out of this device?')) {
+      localStorage.removeItem('sb_session');
+      document.getElementById('loginOverlay').style.display = 'flex';
+      document.getElementById('pinInput').value = '';
+    }
+  }
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('service-worker.js');
+  }
+})();
+</script>
+</body>
+</html>
