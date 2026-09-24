@@ -76,7 +76,10 @@ with st.form("add_item_form"):
     new_name = st.text_input("Name")
     new_variant = st.text_input("Variant", value="")
     new_price = st.number_input("Price", min_value=0.0, step=1.0)
-    new_theme = st.text_input("Theme (CSS class, optional)", value="")
+    THEME_OPTIONS = ['t-vanilla', 't-mango', 't-strawberry', 't-pistachio', 't-choco', 't-gold']
+    theme_counts = idf["theme"].value_counts().to_dict() if not idf.empty else {}
+    suggested_theme = min(THEME_OPTIONS, key=lambda t: theme_counts.get(t, 0))
+    new_theme = st.selectbox("Theme color", THEME_OPTIONS, index=THEME_OPTIONS.index(suggested_theme))
     if st.form_submit_button("Add item"):
         if not new_name:
             st.error("Name is required.")
@@ -94,14 +97,19 @@ with st.form("add_item_form"):
 
 if not idf.empty:
     st.write("Edit / activate / deactivate")
-    target_item = st.selectbox("Item", idf["id"].tolist())
+    idf["display"] = idf["name"] + (idf["variant"].apply(lambda v: f" ({v})" if v else ""))
+    display_to_id = dict(zip(idf["display"], idf["id"]))
+    target_display = st.selectbox("Item", list(display_to_id.keys()))
+    target_item = display_to_id[target_display]
     current = idf[idf["id"] == target_item].iloc[0]
 
     with st.form("edit_item_form"):
         edit_name = st.text_input("Name", value=current["name"])
         edit_variant = st.text_input("Variant", value=current["variant"] or "")
         edit_price = st.number_input("Price", min_value=0.0, step=1.0, value=float(current["price"]))
-        edit_theme = st.text_input("Theme", value=current["theme"] or "")
+        THEME_OPTIONS = ['t-vanilla', 't-mango', 't-strawberry', 't-pistachio', 't-choco', 't-gold']
+        current_theme = current["theme"] if current["theme"] in THEME_OPTIONS else THEME_OPTIONS[0]
+        edit_theme = st.selectbox("Theme color", THEME_OPTIONS, index=THEME_OPTIONS.index(current_theme))
         if st.form_submit_button("Save changes"):
             client.table("items").update({
                 "name": edit_name, "variant": edit_variant,
