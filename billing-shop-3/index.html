@@ -435,7 +435,7 @@
 (function () {
   var SUPABASE_URL = 'https://zioniculywkhdfnuthcs.supabase.co';
   var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inppb25pY3VseXdraGRmbnV0aGNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwODUxOTIsImV4cCI6MjEwNTY2MTE5Mn0.Ney1VVhDm0mJUgwLVmRvcwI1Ro9OMnPaH1wamVvjDbs';
-  var SHOP_EMAIL = 'shop03@amores.local'; // change per shop deployment copy
+  var SHOP_EMAIL = 'shop1@amores.local'; // change per shop deployment copy
 
   function getSession() {
     try { return JSON.parse(localStorage.getItem('sb_session') || 'null'); } catch (e) { return null; }
@@ -495,7 +495,7 @@
     pushBill(bill).catch(function () { queuePending(bill); });
   }
 
-  var ITEMS = [
+    var FALLBACK_ITEMS = [
     { id: 'cone_s',    name: 'Cone',        variant: 'Small', price: 20, theme: 't-vanilla' },
     { id: 'cone_l',    name: 'Cone',        variant: 'Large', price: 30, theme: 't-mango' },
     { id: 'mini_a',    name: 'Mini Sundae', variant: 'A',     price: 40, theme: 't-strawberry' },
@@ -503,6 +503,28 @@
     { id: 'sundae',    name: 'Sundae',      variant: '',      price: 60, theme: 't-choco' },
     { id: 'spl_sundae',name: 'Spl Sundae',  variant: '',      price: 80, theme: 't-gold' }
   ];
+
+  var ITEMS = (function () {
+    try {
+      var cached = JSON.parse(localStorage.getItem('cached_items'));
+      return (cached && cached.length) ? cached : FALLBACK_ITEMS;
+    } catch (e) { return FALLBACK_ITEMS; }
+  })();
+
+  function fetchItems() {
+    var session = getSession();
+    if (!session) return;
+    var filter = 'or=(shop_id.eq.' + session.shop_id + ',shop_id.is.null)';
+    fetch(SUPABASE_URL + '/rest/v1/items?active=eq.true&' + filter + '&select=id,name,variant,price,theme', {
+      headers: { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + session.token }
+    }).then(function (r) { return r.json(); }).then(function (data) {
+      if (Array.isArray(data) && data.length) {
+        ITEMS = data;
+        localStorage.setItem('cached_items', JSON.stringify(data));
+        renderAll();
+      }
+    }).catch(function () { /* offline — keep using cached ITEMS silently */ });
+  }
 
   var STORAGE_KEY = 'sundae_counter_bills_v1';
   var cart = {}; // itemId -> qty
@@ -741,12 +763,14 @@
 
   if (getSession()) {
     document.getElementById('loginOverlay').style.display = 'none';
+    fetchItems();
   }
   document.getElementById('pinLoginBtn').addEventListener('click', function () {
     var pin = document.getElementById('pinInput').value;
     doLogin(pin).then(function () {
       document.getElementById('loginOverlay').style.display = 'none';
       trySyncPending();
+      fetchItems();
     }).catch(function (e) {
       document.getElementById('loginError').textContent = e.message || 'Login failed';
     });
