@@ -22,18 +22,18 @@
     --text-dim: #c7b6d6;
     --text-faint: #8f7ba3;
 
-    --vanilla: #f3e3b8;
+    --vanilla: #f5e3ad;
     --vanilla-ink: #4a3a14;
-    --mango: #f2b441;
-    --mango-ink: #4a3308;
-    --strawberry: #f2a3b6;
-    --strawberry-ink: #4a1524;
-    --pistachio: #a6d9a0;
-    --pistachio-ink: #1c3a17;
-    --choco: #c99a6b;
-    --choco-ink: #3a2410;
-    --gold: #e8c15a;
-    --gold-ink: #453308;
+    --mango: #ff9f2e;
+    --mango-ink: #3d2400;
+    --strawberry: #ff7a9c;
+    --strawberry-ink: #4a0f22;
+    --pistachio: #7cc576;
+    --pistachio-ink: #12300f;
+    --choco: #a56b3c;
+    --choco-ink: #2a1608;
+    --gold: #f0b429;
+    --gold-ink: #3d2900;
 
     --good: #8fd19e;
     --danger: #e08a8a;
@@ -158,12 +158,14 @@
     40% { transform: scale(0.94); }
     100% { transform: scale(1); }
   }
-  .item-tile.t-vanilla { background: var(--vanilla); color: var(--vanilla-ink); }
-  .item-tile.t-mango { background: var(--mango); color: var(--mango-ink); }
-  .item-tile.t-strawberry { background: var(--strawberry); color: var(--strawberry-ink); }
-  .item-tile.t-pistachio { background: var(--pistachio); color: var(--pistachio-ink); }
-  .item-tile.t-choco { background: var(--choco); color: var(--choco-ink); }
-  .item-tile.t-gold { background: var(--gold); color: var(--gold-ink); }
+  .item-tile { background-blend-mode: overlay; }
+  .item-tile.t-vanilla { background: linear-gradient(160deg, rgba(255,255,255,0.35), transparent 55%), var(--vanilla); color: var(--vanilla-ink); box-shadow: 0 4px 0 rgba(0,0,0,0.12), 0 6px 14px rgba(74,58,20,0.25); }
+  .item-tile.t-mango { background: linear-gradient(160deg, rgba(255,255,255,0.35), transparent 55%), var(--mango); color: var(--mango-ink); box-shadow: 0 4px 0 rgba(0,0,0,0.15), 0 6px 14px rgba(255,159,46,0.35); }
+  .item-tile.t-strawberry { background: linear-gradient(160deg, rgba(255,255,255,0.35), transparent 55%), var(--strawberry); color: var(--strawberry-ink); box-shadow: 0 4px 0 rgba(0,0,0,0.15), 0 6px 14px rgba(255,122,156,0.35); }
+  .item-tile.t-pistachio { background: linear-gradient(160deg, rgba(255,255,255,0.35), transparent 55%), var(--pistachio); color: var(--pistachio-ink); box-shadow: 0 4px 0 rgba(0,0,0,0.15), 0 6px 14px rgba(124,197,118,0.35); }
+  .item-tile.t-choco { background: linear-gradient(160deg, rgba(255,255,255,0.25), transparent 55%), var(--choco); color: var(--choco-ink); box-shadow: 0 4px 0 rgba(0,0,0,0.18), 0 6px 14px rgba(165,107,60,0.35); }
+  .item-tile.t-gold { background: linear-gradient(160deg, rgba(255,255,255,0.35), transparent 55%), var(--gold); color: var(--gold-ink); box-shadow: 0 4px 0 rgba(0,0,0,0.15), 0 6px 14px rgba(240,180,41,0.35); }
+  .item-tile:active { box-shadow: 0 1px 0 rgba(0,0,0,0.15); }
 
   .bill-card {
     background: var(--surface);
